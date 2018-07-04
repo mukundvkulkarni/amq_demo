@@ -1,0 +1,94 @@
+Setting client pid to 7964
+SERVER: changeConfig: settings -> {xml={}}
+didOpen: TextDocumentItem [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+  languageId = "xml"
+  version = 1
+  text = "<?xml version="1.0" encoding="UTF-8"?>\r\n<beans xmlns="http://www.springframework.org/schema/beans"\r\n    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">\r\n    <!-- Camel Routes -->\r\n    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">\r\n        <!--\r\n          A route to generate a random order every 5th second.\r\n\r\n          When this route is started, it will automatically send xml messages to the JMS queue incomingOrders on the\r\n          ActiveMQ broker.\r\n\r\n          The <log/> elements are used to add human-friendly business logging statements. They make it easier to see what the\r\n          route is doing.\r\n\r\n          The amq component ensures to use the broker in the kubernetes cluster.\r\n        -->\r\n        <route id="generate-order-route" streamCache="true">\r\n            <from id="route-timer" uri="timer:order?period=3000"/>\r\n            <bean id="route-new-order" method="generateOrder" ref="orderGenerator"/>\r\n            <setHeader headerName="Exchange.FILE_NAME" id="route-set-order-header">\r\n                <!-- defining the header containing a simulated file name -->\r\n                <method method="generateFileName" ref="orderGenerator"/>\r\n            </setHeader>\r\n            <log id="route-log-order" message="Generating order ${file:name}"/>\r\n            <to id="route-to-incoming-orders" uri="amq:incomingOrders"/>\r\n        </route>\r\n        <!--\r\n          This route consumes messages from the JMS queue incomingOrders on the ActiveMQ broker within the ESB.\r\n\r\n          The <choice/> element contains the content based router. The two <when/> clauses use XPath to define the criteria\r\n          for entering that part of the route. When the country in the XML message is set to UK or US, the message will follow\r\n          the specific rules defined for that country. The <otherwise/> element ensures that any message that does not meet the\r\n          requirements for either of the <when/> elements will follow another route.\r\n        -->\r\n        <route id="jms-cbr-route" streamCache="true">\r\n            <from id="route-from-incoming-orders" uri="amq:incomingOrders"/>\r\n            <choice id="route-choose-country">\r\n                <when id="route-when-uk">\r\n                    <xpath>/order/customer/country = 'UK'</xpath>\r\n                    <log id="route-log-uk" message="Sending order ${file:name} to the UK"/>\r\n                    <!-- Put additional routing rules for UK messages here -->\r\n                </when>\r\n                <when id="route-when-us">\r\n                    <xpath>/order/customer/country = 'US'</xpath>\r\n                    <log id="route-log-us" message="Sending order ${file:name} to the US"/>\r\n                    <!-- Put additional routing rules for US messages here -->\r\n                </when>\r\n                <otherwise id="route-when-other-country">\r\n                    <log id="route-log-other" message="Sending order ${file:name} to another country"/>\r\n                    <!-- Put additional routing rules for other messages here -->\r\n                </otherwise>\r\n            </choice>\r\n            <log id="route-final-log" message="Done processing ${file:name}"/>\r\n        </route>\r\n    </camelContext>\r\n</beans>\r\n"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+didOpen: TextDocumentItem [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/pom.xml"
+  languageId = "xml"
+  version = 1
+  text = "<?xml version="1.0" encoding="UTF-8" standalone="no"?>\r\n<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">\r\n\r\n  <modelVersion>4.0.0</modelVersion>\r\n\r\n  <groupId>org.example.fis</groupId>\r\n  <artifactId>fis-spring-boot-camel-amq</artifactId>\r\n  <version>1.0-SNAPSHOT</version>\r\n  <packaging>jar</packaging>\r\n\r\n\r\n  <name>Fabric8 :: Quickstarts :: Spring Boot :: Camel and ActiveMQ</name>\r\n  <description>Spring Boot example running a Camel route connecting to ActiveMQ</description>\r\n\r\n  <properties>\r\n    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n\r\n    <!-- dependency versions -->\r\n    <fabric8.version>2.2.170.redhat-000023</fabric8.version>\r\n    <spring-boot.version>1.4.1.RELEASE</spring-boot.version>\r\n\r\n    <!-- maven plugin versions -->\r\n    <fabric8.maven.plugin.version>3.1.80.redhat-000023</fabric8.maven.plugin.version>\r\n    <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>\r\n    <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>\r\n  </properties>\r\n\r\n  <dependencyManagement>\r\n    <dependencies>\r\n      <dependency>\r\n        <groupId>io.fabric8</groupId>\r\n        <artifactId>fabric8-project-bom-camel-spring-boot</artifactId>\r\n        <version>${fabric8.version}</version>\r\n        <type>pom</type>\r\n        <scope>import</scope>\r\n      </dependency>\r\n    </dependencies>\r\n  </dependencyManagement>\r\n\r\n  <dependencies>\r\n\r\n    <!-- Enabling health checks -->\r\n    <dependency>\r\n      <groupId>org.springframework.boot</groupId>\r\n      <artifactId>spring-boot-starter-actuator</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.springframework.boot</groupId>\r\n      <artifactId>spring-boot-starter-web</artifactId>\r\n    </dependency>\r\n\r\n    <!-- ActiveMQ -->\r\n    <dependency>\r\n      <groupId>org.apache.activemq</groupId>\r\n      <artifactId>activemq-camel</artifactId>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>org.apache.activemq</groupId>\r\n      <artifactId>activemq-pool</artifactId>\r\n    </dependency>\r\n\r\n    <!-- Camel -->\r\n    <dependency>\r\n      <groupId>org.apache.camel</groupId>\r\n      <artifactId>camel-spring-boot-starter</artifactId>\r\n    </dependency>\r\n\r\n    <dependency>\r\n      <groupId>org.hibernate</groupId>\r\n      <artifactId>hibernate-validator</artifactId>\r\n    </dependency>\r\n\r\n    <!-- Test -->\r\n    <dependency>\r\n      <groupId>org.jboss.arquillian.junit</groupId>\r\n      <artifactId>arquillian-junit-container</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n    <dependency>\r\n      <groupId>io.fabric8</groupId>\r\n      <artifactId>fabric8-arquillian</artifactId>\r\n      <scope>test</scope>\r\n    </dependency>\r\n\r\n  </dependencies>\r\n\r\n  <build>\r\n    <testResources>\r\n      <testResource>\r\n        <directory>src/test/resources</directory>\r\n        <filtering>true</filtering>\r\n      </testResource>\r\n    </testResources>\r\n\r\n    <plugins>\r\n      <!-- Compiler plugin enforces Java 1.8 compatibility and activates annotation processors -->\r\n      <plugin>\r\n        <artifactId>maven-compiler-plugin</artifactId>\r\n        <version>${maven-compiler-plugin.version}</version>\r\n        <configuration>\r\n          <source>1.8</source>\r\n          <target>1.8</target>\r\n        </configuration>\r\n      </plugin>\r\n      <plugin>\r\n        <groupId>org.apache.maven.plugins</groupId>\r\n        <artifactId>maven-surefire-plugin</artifactId>\r\n        <version>${maven-surefire-plugin.version}</version>\r\n        <inherited>true</inherited>\r\n        <configuration>\r\n          <excludes>\r\n            <exclude>**/*KT.java</exclude>\r\n          </excludes>\r\n        </configuration>\r\n      </plugin>\r\n\r\n      <plugin>\r\n        <groupId>org.springframework.boot</groupId>\r\n        <artifactId>spring-boot-maven-plugin</artifactId>\r\n        <version>${spring-boot.version}</version>\r\n        <executions>\r\n          <execution>\r\n            <goals>\r\n              <goal>repackage</goal>\r\n            </goals>\r\n          </execution>\r\n        </executions>\r\n      </plugin>\r\n\r\n      <plugin>\r\n        <groupId>io.fabric8</groupId>\r\n        <artifactId>fabric8-maven-plugin</artifactId>\r\n        <version>${fabric8.maven.plugin.version}</version>\r\n        <executions>\r\n          <execution>\r\n            <goals>\r\n              <goal>resource</goal>\r\n              <goal>build</goal>\r\n            </goals>\r\n          </execution>\r\n        </executions>\r\n      </plugin>\r\n    </plugins>\r\n  </build>\r\n</project>\r\n"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/pom.xml"
+]
+SERVER: changeWatchedFiles: size -> 8
+SERVER: changeWatchedFiles: size -> 1
+SERVER: changeWatchedFiles: size -> 1
+didOpen: TextDocumentItem [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+  languageId = "xml"
+  version = 1
+  text = "<?xml version="1.0" encoding="UTF-8"?>\r\n<beans xmlns="http://www.springframework.org/schema/beans"\r\n       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\r\n       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">\r\n\r\n\r\n    <!-- Discovers the ActiveMQ service dynamically -->\r\n    <bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">\r\n\r\n        <!--\r\n            The following properties can be customized in the application.properties file.\r\n            Values can be changed using external environment variables (see application.properties for details).\r\n        -->\r\n\r\n        <property name="brokerURL" value="${activemq.broker.url}"/>\r\n        <property name="userName" value="${activemq.broker.username:#null}"/>\r\n        <property name="password" value="${activemq.broker.password:#null}"/>\r\n    </bean>\r\n\r\n    <bean primary="true" id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop">\r\n        <property name="maxConnections" value="${activemq.pool.max.connections}"/>\r\n        <property name="connectionFactory" ref="jmsConnectionFactory"/>\r\n    </bean>\r\n\r\n    <bean id="jmsConfig" class="org.apache.activemq.camel.component.ActiveMQConfiguration">\r\n        <property name="connectionFactory" ref="pooledConnectionFactory"/>\r\n        <property name="concurrentConsumers" value="${activemq.concurrent.consumers}"/>\r\n    </bean>\r\n\r\n    <bean id="amq" class="org.apache.activemq.camel.component.ActiveMQComponent">\r\n        <property name="configuration" ref="jmsConfig"/>\r\n    </bean>\r\n\r\n</beans>\r\n"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+didClose: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/pom.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+didClose: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+didOpen: TextDocumentItem [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+  languageId = "xml"
+  version = 1
+  text = "<?xml version="1.0" encoding="UTF-8"?>\r\n<beans xmlns="http://www.springframework.org/schema/beans"\r\n       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\r\n       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">\r\n\r\n\r\n    <!-- Discovers the ActiveMQ service dynamically -->\r\n    <bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">\r\n\r\n        <!--\r\n            The following properties can be customized in the application.properties file.\r\n            Values can be changed using external environment variables (see application.properties for details).\r\n        -->\r\n\r\n        <property name="brokerURL" value="${activemq.broker.url}"/>\r\n        <property name="userName" value="${activemq.broker.username:#null}"/>\r\n        <property name="password" value="${activemq.broker.password:#null}"/>\r\n    </bean>\r\n\r\n    <bean primary="true" id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop">\r\n        <property name="maxConnections" value="${activemq.pool.max.connections}"/>\r\n        <property name="connectionFactory" ref="jmsConnectionFactory"/>\r\n    </bean>\r\n\r\n    <bean id="jmsConfig" class="org.apache.activemq.camel.component.ActiveMQConfiguration">\r\n        <property name="connectionFactory" ref="pooledConnectionFactory"/>\r\n        <property name="concurrentConsumers" value="${activemq.concurrent.consumers}"/>\r\n    </bean>\r\n\r\n    <bean id="amq" class="org.apache.activemq.camel.component.ActiveMQComponent">\r\n        <property name="configuration" ref="jmsConfig"/>\r\n    </bean>\r\n\r\n</beans>\r\n"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+hover: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+didOpen: TextDocumentItem [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/logback.xml"
+  languageId = "xml"
+  version = 1
+  text = "<?xml version="1.0" encoding="UTF-8"?>\r\n<!DOCTYPE xml>\r\n<configuration>\r\n\r\n  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">\r\n    <!-- encoders are assigned the type\r\n         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->\r\n    <encoder>\r\n      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>\r\n    </encoder>\r\n  </appender>\r\n\r\n  <root level="info">\r\n    <appender-ref ref="STDOUT" />\r\n  </root>\r\n\r\n</configuration>\r\n"
+]
+didClose: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/logback.xml"
+]
+didClose: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/amq.xml"
+]
+didClose: TextDocumentIdentifier [
+  uri = "file:///d%3A/2018/fuse/test/fis-spring-boot-camel-amq/src/main/resources/spring/camel-context.xml"
+]
+Shutting down language server
+Stopping language server
